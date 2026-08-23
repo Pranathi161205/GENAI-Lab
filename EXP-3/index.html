@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home AC Agent</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 350px; text-align: center; }
+        .temp-display { font-size: 48px; font-weight: bold; color: #333; margin: 10px 0; }
+        input[type=range] { width: 100%; margin: 20px 0; }
+        .status-box { padding: 15px; border-radius: 8px; font-weight: bold; margin-top: 15px; }
+        .ac-off { background: #fee2e2; color: #991b1b; }
+        .ac-on { background: #dcfce7; color: #166534; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Smart Home Agent</h2>
+    <p>Target Comfort: 22°C - 24°C</p>
+    
+    <div class="temp-display" id="tempVal">25°C</div>
+    <input type="range" id="tempSlider" min="16" max="35" value="25" oninput="updateTemperature(this.value)">
+
+    <div id="acStatus" class="status-box ac-off">AC Status: OFF</div>
+</div>
+
+<script>
+    const n8nWebhookUrl = 'https://pranathihiranmayibodda.app.n8n.cloud/webhook/001b8e39-2dea-4924-b629-5c67e55d9a42'; // Replace with your n8n production/test webhook URL
+
+    function updateTemperature(val) {
+        document.getElementById('tempVal').innerText = val + '°C';
+        
+        // Send temperature to n8n backend agent
+        fetch(n8nWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ temperature: parseFloat(val) })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const statusBox = document.getElementById('acStatus');
+            if (data.acState === 'ON') {
+                statusBox.className = 'status-box ac-on';
+                statusBox.innerText = 'AC Status: ON ❄️';
+            } else {
+                statusBox.className = 'status-box ac-off';
+                statusBox.innerText = 'AC Status: OFF ⏻';
+            }
+        })
+        .catch(err => console.error('Error connecting to n8n:', err));
+    }
+</script>
+
+</body>
+</html>
